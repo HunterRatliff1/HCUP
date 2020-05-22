@@ -1,0 +1,147 @@
+---
+title: "Clinical Classifications Software"
+author: "Hunter Ratliff, htratlif@utmb.edu"
+date: "5/20/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+library(tidyverse)
+library(icd) # helps with ICD codes
+library(touch)
+```
+
+# ICD-10
+
+## Procedures - CCS
+
+ICD-10-PCS (procedure) codes --> Clinical Classifications Software
+
+Downloaded _beta_ version 2020.1 from [HCUP website](https://www.hcup-us.ahrq.gov/toolssoftware/ccs10/ccs10.jsp) on 2020-05-20
+
+The beta versions of the ICD-10-PCS tool file (CSV) are composed of eight fields separated by commas. The files are organized as follows:
+- Field 1: Procedure Code
+- Field 2: CCS Category
+- Field 3: Code Description
+- Field 4: CCS Category Description
+- Field 5: Multi-level 1 Category
+- Field 6: Multi-level 1 Category Description
+- Field 7: Multi-level 2 Category
+- Field 8: Multi-level 2 Category Description
+
+```{r, eval=F}
+ccs_pr_icd10 <- read_csv("HCUP Files/ccs_pr_icd10pcs_2020_1.csv",skip = 1,
+                         col_names = c("I10_PR", "CCS_category", "I10_PR_Desc", "CCS_category_Desc", 
+                                       "CCS_Lvl_1", "CCS_Lvl_1_Label", "CCS_Lvl_2", "CCS_Lvl_2_Label")) %>%
+  mutate_all(~str_remove_all(.,"'"))
+
+ccs_pr_icd10 %>% write_csv("HCUP Files/clean_ccs/ccs_pr_icd10.csv")
+ccs_pr_icd10
+
+
+```
+
+## Diagnosis - CCS
+
+This has been replaced by the CCSR^[Clinical Classifications Software **Refined**] (below), and is [archived here](https://www.hcup-us.ahrq.gov/toolssoftware/ccsr/ccsr_archive.jsp#ccsbeta). I downloaded the CCS v2019.1 (valid for ICD-10-CM codes through September 2019) on 2020-05-20
+
+Unlike the CCSR, this table maps ICD-10 codes to the same 283 CCS categories as the ICD-9 CCS
+
+```{r, eval=F}
+ccs_dx_icd10 <- read_csv("HCUP Files/ccs_dx_icd10cm_2019_1.csv", skip = 1,
+                            col_names = c("I10_DX", "CCS_category", "I10_DX_Desc", "CCS_category_Desc", 
+                                          "CCS_Lvl_1", "CCS_Lvl_1_Label", "CCS_Lvl_2", "CCS_Lvl_2_Label")) %>%
+  mutate_all(~str_remove_all(.,"'"))
+
+ccs_dx_icd10
+```
+
+
+## Diagnosis - CCSR
+
+ICD-10-CM (diagnosis) codes -->  Clinical Classifications Software **Refined**
+
+Downloaded CCSR version 2020.2 from [HCUP website](https://www.hcup-us.ahrq.gov/toolssoftware/ccsr/ccs_refined.jsp) on 2020-05-20
+
+These codes are unique from the CCS codes in a few ways, as outlined in [table 1](https://www.hcup-us.ahrq.gov/toolssoftware/ccsr/DXCCSR-User-Guide.pdf#page=7) of the documentation. Unlike the CCS codes, these map ICD codes to _multiple_ categories. These are listed in `CCSR_cat(1-5)`, and they've also assigned a default category (that I call `CCSR_default`).
+
+```{r, eval=F}
+ccsR_dx_icd10 <- read_csv("HCUP Files/$DXCCSR_v2020-2.CSV", skip=1,
+                          col_types = cols(.default = col_character()), 
+                          col_names = c("I10_DX", "I10_DX_Desc", "CCSR_default", "CCSR_default_label",
+                                        "CCSR_cat1", "CCSR_cat1_label", "CCSR_cat2", "CCSR_cat2_label",
+                                        "CCSR_cat3", "CCSR_cat3_label", "CCSR_cat4", "CCSR_cat4_label",
+                                        "CCSR_cat5", "CCSR_cat5_label")) %>%
+  mutate_all(~str_remove_all(.,"'"))
+
+ccsR_dx_icd10
+```
+
+# ICD-9
+
+## Procedures - CCS
+
+```{r}
+"TBD"
+```
+
+
+## Diagnosis - CCS
+
+
+# CPT to CSS
+
+Used to map CPT and HCPCS codes into CCS categories
+
+Downloaded 2019 version from [HCUP website](https://www.hcup-us.ahrq.gov/toolssoftware/ccs_svcsproc/ccssvcproc.jsp) on 2020-05-20. Note that CPT codes are copyright of the American Medical Association. All rights reserved.
+
+It's also a pain since they give you ranges
+
+```{r}
+ccs_pr_cpt <- read_csv("HCUP Files/2019_ccs_services_procedures.csv", 
+    skip = 2, col_names = c("CodeRange", "CSS", "CSS_Label")) %>%
+  mutate_all(~str_remove_all(.,"'")) %>%
+  separate(CodeRange, c("CodeRange_begin", "CodeRange_end"))
+
+ccs_pr_cpt
+```
+
+It's also a pain since they give you ranges, which are hard to look up with CPT codes (since they aren't all numbers). I made a quick and dirty function below that should get the job done, but didn't test it every much
+
+```{r, warning=F}
+cpt_to_css <- function(cpt_code, data) {
+  # If data not supplied, use ccs_pr_cpt df
+  if(missing(data) & exists("ccs_pr_cpt")) data <- ccs_pr_cpt
+  
+  # If the code is numeric (or should be but wasn't passed
+  # as an interger), make it one
+  if(is.numeric(cpt_code)|!str_detect(cpt_code, "[:alpha:]")) {
+    cpt_code <- as.numeric(cpt_code)
+  }
+  
+  # If coerced cpt_code is numeric, use ranges
+  if(is.numeric(cpt_code)) {
+    ccs_pr_cpt %>% 
+      mutate(CodeRange_begin = as.numeric(CodeRange_begin),
+             CodeRange_end = as.numeric(CodeRange_end)) %>%
+      filter(!is.na(CodeRange_begin)) %>%
+      filter(cpt_code>=CodeRange_begin, cpt_code<=CodeRange_end)
+  } else({
+    filter(ccs_pr_cpt, CodeRange_begin==cpt_code  |  CodeRange_end==cpt_code)
+  })
+}
+
+
+cpt_to_css(28800)   
+cpt_to_css("0202T")  # Results when code isn't numeric
+cpt_to_css("27603")  # Still works if numeric code passed as char
+cpt_to_css(97597)
+
+rm(cpt_to_css)
+```
+
+
+
+
+
