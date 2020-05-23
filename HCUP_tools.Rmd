@@ -12,6 +12,25 @@ library(icd) # helps with ICD codes
 library(touch)
 ```
 
+# About
+
+## Purpose
+
+The purpose of this program is to:
+
+- Facilitate reproducibility by documenting the steps from the HCUP raw files to the files used in practice
+- Document the version of files being used
+- Clean up some minor formatting issues
+
+## Reading in these files
+
+If you read the parsed files in from CSV, EVERYTHING needs to be read in as characters
+
+
+
+
+
+
 # ICD-10
 
 ## Procedures - CCS
@@ -54,6 +73,7 @@ ccs_dx_icd10 <- read_csv("HCUP Files/ccs_dx_icd10cm_2019_1.csv", skip = 1,
                                           "CCS_Lvl_1", "CCS_Lvl_1_Label", "CCS_Lvl_2", "CCS_Lvl_2_Label")) %>%
   mutate_all(~str_remove_all(.,"'"))
 
+ccs_dx_icd10  %>% write_csv("HCUP Files/clean_ccs/ccs_dx_icd10.csv")
 ccs_dx_icd10
 ```
 
@@ -75,6 +95,7 @@ ccsR_dx_icd10 <- read_csv("HCUP Files/$DXCCSR_v2020-2.CSV", skip=1,
                                         "CCSR_cat5", "CCSR_cat5_label")) %>%
   mutate_all(~str_remove_all(.,"'"))
 
+ccsR_dx_icd10  %>% write_csv("HCUP Files/clean_ccs/ccsR_dx_icd10.csv")
 ccsR_dx_icd10
 ```
 
