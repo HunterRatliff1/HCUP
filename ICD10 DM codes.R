@@ -9,7 +9,8 @@ library(googlesheets4)
 ###        Read files       ###
 ### ----------------------- ###
 ss <- gs4_get("https://docs.google.com/spreadsheets/d/166lGOoZZFeuD4eBXyZQVkWyYw0XnkwhbAsQEEEQ-I7c/edit#gid=0")
-pr_ccs <- read_csv("HCUP Files/clean_ccs/ccs_pr_icd10.csv")
+pr_ccs <- read_csv("HCUP Files/clean_ccs/ccs_pr_icd10.csv", col_types = cols(.default = col_character()))
+dx_ccsR <- read_csv("HCUP Files/clean_ccs/ccsR_dx_icd10.csv", col_types = cols(.default = col_character()))
 
 
 
@@ -287,8 +288,6 @@ c("I20.x", "I25.x", "I47.x", "I48.x", "I49.x") %>%
 ###############################
 ###      Osteomyelitis      ###
 ### ----------------------- ### 
-
-### Osteomyelitis
 c("M86.16x", "M86.17x", "M86.26x", "M86.27x",
   "M86.66x", "M86.67x") %>%
   
@@ -356,7 +355,48 @@ c("E11.621", "L97.3x", "L97.4x", "L97.5x") %>%
   
   # Write to google sheet
   sheet_write(ss=ss, sheet="Ulcer")
+
+
+
+###############################
+###       Open wounds       ###
+### -------+-------+------- ###
+"S91.x" %>%
+  expand_icd10() %>%
   
+  # Unspecified open wound, from external cause
+  filter(str_detect(ICD10, "^S91[0-3]0")) %>%
+  
+  
+  # Extract code chars by position
+  mutate(n4 = str_sub(ICD10, start = 4L, end = 4L),
+         n6 = str_sub(ICD10, start = 6L, end = 6L),
+         n7 = str_sub(ICD10, start = 7L, end = 7L),
+         n4 = as.numeric(n4),
+         n6 = as.numeric(n6)) %>%
+  
+  
+  # Get laterality, location, and timing
+  mutate(Laterality = str_extract(long_desc, "right|left")) %>%
+  
+  mutate(Location = case_when(n4==0             ~ "Ankle",
+                              n4==3             ~ "Foot",
+                              between(n6, 1, 3) ~ "Great toe(s)",
+                              between(n6, 4, 6) ~ "Lesser toe(s)",
+                              n6==9             ~ "Unspecified toe(s)",
+                              TRUE              ~ "Unspecified toe(s)")) %>%
+  
+  mutate(Timing = recode(n7, "A" = "Initial encounter", 
+                             "D" = "Subsequent encounter",
+                             "S" = "sequela")) %>%
+  
+  # Drop columns
+  select(-starts_with("n")) %>%
+  
+  
+  # Write to google sheet
+  sheet_write(ss=ss, sheet="Open Wounds")
+
 
 
 ###############################
