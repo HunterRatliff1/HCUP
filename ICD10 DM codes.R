@@ -168,20 +168,22 @@ icd10_map_ahrq[["Obesity"]] %>%
 ###############################
 ###           CKD           ###
 ### ----------------------- ###
-# Codes for CKD from AHRQ  -plus-  diabetes CKD (E13.2x)  -plus- dialysis codes
-c(icd10_map_ahrq$Renal, "E13.2x", "N25.0x", "Z49.x", "Z99.2x") %>% 
+c(icd10_map_ahrq$Renal, "E13.2x") %>% 
   
   # Look up codes & children
   map_dfr(expand_icd10, Comorbidity = "CKD/ESRD") %>%
+  sheet_write(ss=ss, sheet="CKD/ESRD")
+
+
+
+###############################
+###        Dialysis         ###
+### ----------------------- ###
+c("N25.0x", "Z49.x", "Z99.2x") %>% 
   
-  # Flags to indicate if dependant on dialysis & if code is
-  # not included in standard AHRQ set
-  mutate(
-    Dialysis = ICD10 %in% children(c("N250", "Z49", "Z992")),
-    not_in_AHRQ = !ICD10 %in% icd10_map_ahrq[["Renal"]]) %>%
-  
-  # Write to googlesheet
-  sheet_write(ss=ss, sheet="CKD/Dialysis")
+  # Look up codes & children & write to google sheet
+  map_dfr(expand_icd10, Comorbidity = "Dialysis") %>%
+  sheet_write(ss=ss, sheet="Dialysis")
   
 
   
@@ -360,9 +362,9 @@ c("E11.621", "L97.3x", "L97.4x", "L97.5x") %>%
 
 ###############################
 ###       Open wounds       ###
-### -------+-------+------- ###
+### ----------------------- ### 
 "S91.x" %>%
-  expand_icd10() %>%
+  expand_icd10(Comorbidity = "Open Wounds") %>%
   
   # Unspecified open wound, from external cause
   filter(str_detect(ICD10, "^S91[0-3]0")) %>%
@@ -402,9 +404,6 @@ c("E11.621", "L97.3x", "L97.4x", "L97.5x") %>%
 ###############################
 ###       Other ideas       ###
 ### -------+-------+------- ###
-
-# c("S91.10x", "S91.20x", "S91.30x") %>% map_dfr(expand_icd10, Comorbidity = "Open wound") %>%
-#   View()
 
 # c("E11.52x", "A48.0") %>% map_dfr(expand_icd10, Comorbidity = "Gangrene") %>%
 #   View()
