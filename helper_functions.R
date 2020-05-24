@@ -55,3 +55,26 @@ expand_icd10 <- function(single_code, ..., verbose=T){
   df %>% select(names(dots), parent_code:long_desc) # reorder
   
 }
+
+
+
+split_pcs10_codes <- function(.data, ..., as_fct=F, col_name=I10_PR){
+  ### Splits ICD-10 procedure codes into their components. Codes must
+  ### be contained in a data.frame/tibble (`.data`) in the column 
+  ### specified by `I10_PR` (unquoted)
+  dots <- list(...)
+  col_name <- enquo(col_name)
+  
+  df <- .data %>%
+    mutate(BodySystem = str_sub(!!col_name, start = 2L, end = 2L),
+           Operation  = str_sub(!!col_name, start = 3L, end = 3L),
+           BodyPart   = str_sub(!!col_name, start = 4L, end = 4L),
+           Approach   = str_sub(!!col_name, start = 5L, end = 5L),
+           Device     = str_sub(!!col_name, start = 6L, end = 6L),
+           Qualifier  = str_sub(!!col_name, start = 7L, end = 7L))
+  
+  if(as_fct) df <- mutate_at(df, vars(BodySystem:Qualifier), as_factor)
+  
+  df
+  
+}
