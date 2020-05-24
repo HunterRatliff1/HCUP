@@ -58,13 +58,17 @@ expand_icd10 <- function(single_code, ..., verbose=T){
 
 
 
-split_pcs10_codes <- function(.data, ..., as_fct=F, col_name=I10_PR){
+split_pcs10_codes <- function(.data, ..., recode_list, as_fct=F, col_name=I10_PR){
   ### Splits ICD-10 procedure codes into their components. Codes must
   ### be contained in a data.frame/tibble (`.data`) in the column 
-  ### specified by `I10_PR` (unquoted)
+  ### specified by `I10_PR` (unquoted).
+  ###
+  ### If given a list in `recode_list`, it will recode these columns
+  ### with the arguments in the list
   dots <- list(...)
   col_name <- enquo(col_name)
   
+  # split out the codes
   df <- .data %>%
     mutate(BodySystem = str_sub(!!col_name, start = 2L, end = 2L),
            Operation  = str_sub(!!col_name, start = 3L, end = 3L),
@@ -73,8 +77,25 @@ split_pcs10_codes <- function(.data, ..., as_fct=F, col_name=I10_PR){
            Device     = str_sub(!!col_name, start = 6L, end = 6L),
            Qualifier  = str_sub(!!col_name, start = 7L, end = 7L))
   
+  # If given list to recode
+  if(!missing(recode_list)) {
+    testthat::expect_named(recode_list, c("BodySystem", "Operation", "BodyPart",
+                                          "Approach", "Device", "Qualifier"))
+    
+    df <- df %>%
+      mutate(BodySystem = recode(BodySystem, !!!recode_list$BodySystem),
+             Operation  = recode(Operation,  !!!recode_list$Operation),
+             BodyPart   = recode(BodyPart,   !!!recode_list$BodyPart),
+             Approach   = recode(Approach,   !!!recode_list$Approach),
+             Device     = recode(Device,     !!!recode_list$Device),
+             Qualifier  = recode(Qualifier,  !!!recode_list$Qualifier))
+  }
+  
+  # If told to make factors
   if(as_fct) df <- mutate_at(df, vars(BodySystem:Qualifier), as_factor)
   
   df
   
 }
+
+
