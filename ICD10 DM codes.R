@@ -4,63 +4,18 @@ library(icd)    # helps with ICD codes
 library(touch)  # Tools Of Unilization and Cost in Healthcare
 library(googlesheets4)
 
+# Load helper functions
+source("~/Github/HCUP/helper_functions.R") 
+# See https://raw.githubusercontent.com/HunterRatliff1/HCUP/master/helper_functions.R
+
 
 ###############################
 ###        Read files       ###
 ### ----------------------- ###
+gs4_auth(email="hunterratliff1@gmail.com")
 ss <- gs4_get("https://docs.google.com/spreadsheets/d/166lGOoZZFeuD4eBXyZQVkWyYw0XnkwhbAsQEEEQ-I7c/edit#gid=0")
 pr_ccs <- read_csv("HCUP Files/clean_ccs/ccs_pr_icd10.csv", col_types = cols(.default = col_character()))
 dx_ccsR <- read_csv("HCUP Files/clean_ccs/ccsR_dx_icd10.csv", col_types = cols(.default = col_character()))
-
-
-
-
-###################################################################
-###   Function that given ICD-10 codes, will return             ###
-###   a table with their descriptions. Additionally, this       ###
-###   expands any children codes if the ICD-10 code ends in x   ###
-### ----------------------------------------------------------- ###
-expand_icd10 <- function(single_code, ..., verbose=T){
-  dots <- list(...)
-  
-  # Should be a single code
-  testthat::expect_length(single_code, 1)
-  
-  # Logical flag if children should be returned
-  get_children <- str_detect(single_code, "x$")
-  
-  # If present, remove the x and make short code
-  parent <- as.icd10(str_remove(single_code, "x$")) %>% decimal_to_short()
-  
-  # Give warning if code not found
-  if(!is_defined(parent)) warning("parent code `",parent, "` not defined ICD-10 code")
-  
-  # New object called target codes
-  target_codes <- parent
-  
-  if(get_children){
-    target_codes <- parent %>% children()
-    if(length(target_codes)>1 & verbose==T) message(length(target_codes)-1,
-                                                    " children codes found for ", single_code)
-  }
-  
-  
-  # Make the table
-  df <- target_codes %>%
-    explain_table() %>% as_tibble() %>%
-    mutate(code_decimal = short_to_decimal(code),
-           parent_code  = single_code) %>%
-    select(parent_code, ICD10=code, code_decimal, short_desc, long_desc) %>%
-    mutate_all(as.character) %>%
-    
-    mutate(...)  # forward tidy dots
-  
-    df %>% select(names(dots), parent_code:long_desc) # reorder
-  
-}
-
-
-
 
 
 
@@ -94,7 +49,7 @@ pr_ccs %>%
 ### ----------------------- ###
 pr_ccs %>%
   filter(CCS_category=="168") %>% # I&D; skin SQ tissue and fascia
-  select(I10_PR:I10_PR_Desc) %>%
+  select(I10_PR:I10_PR_Desc) %>% 
   
   filter(str_detect(I10_PR_Desc, "Drain")) %>%
   filter(!str_detect(I10_PR_Desc, "Face|Back|Chest|Arm|Abd|Hand|Neck|Scalp|Head|Buttock")) %>%
@@ -121,6 +76,7 @@ pr_ccs %>%
   sheet_write(ss=ss, sheet="I&D")
 
 
+  
 ###############################
 ###       Wound care        ###
 ### ----------------------- ###
@@ -141,6 +97,8 @@ pr_ccs %>%
          Device    = recode(Device, !!!device_key)) %>%
   sheet_write(ss=ss, sheet="WoundCare")
 rm(operation_key, device_key)
+
+
 
 
 ###############################
@@ -398,6 +356,35 @@ c("E11.621", "L97.3x", "L97.4x", "L97.5x") %>%
   
   # Write to google sheet
   sheet_write(ss=ss, sheet="Open Wounds")
+
+
+
+
+
+
+
+
+
+## These CPT codes below map to the CCS
+# CPT codes: c(11042:11047, 97597:97602, 10060, 10061, 20000, 20005)
+
+## CSS:
+# > 164	Other OR therapeutic procedures on musculoskeletal system
+# > 168	Incision and drainage, skin and subcutaneous tissue			
+# > 169	Debridement of wound, infection or burn			
+# > 214	Traction, splints, and other wound care			
+pr_ccs %>%
+  filter(CCS_category %in% c(164, 169)) %>%
+  # filter(CCS_category == "169") %>%
+  mutate(asd = str_sub(I10_PR, start = 1L, end = 2L)) %>%
+  filter(!str_detect(I10_PR, "^0X")) %>%
+  # count(asd) 
+  filter(str_detect(I10_PR, "^0Y")) %>%
+  View()
+
+
+
+
 
 
 
