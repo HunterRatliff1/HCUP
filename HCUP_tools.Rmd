@@ -126,14 +126,28 @@ ccs_pr_cpt <- read_csv("HCUP Files/2019_ccs_services_procedures.csv",
   separate(CodeRange, c("CodeRange_begin", "CodeRange_end"))
 
 ccs_pr_cpt
+ccs_pr_cpt %>% write_csv("HCUP Files/clean_ccs/ccs_pr_cpt.csv")
+
 ```
 
 It's also a pain since they give you ranges, which are hard to look up with CPT codes (since they aren't all numbers). I made a quick and dirty function below that should get the job done, but didn't test it every much
 
 ```{r, warning=F}
-cpt_to_css <- function(cpt_code, data) {
-  # If data not supplied, use ccs_pr_cpt df
-  if(missing(data) & exists("ccs_pr_cpt")) data <- ccs_pr_cpt
+cpt_to_css <- function(cpt_code, .data) {
+  ######################################################
+  ###   Handle situations where .data not provided   ###
+  ### ---------------------------------------------- ###
+  if(missing(.data)) {
+    if(exists("ccs_pr_cpt")) {
+      # Use ccs_pr_cpt from enviroment, if it exists
+      .data <- ccs_pr_cpt
+    } else({
+      # If that doesn't work, download it from local file
+      .data <- read_csv("~/Github/HCUP/HCUP Files/clean_ccs/ccs_pr_cpt.csv", col_types = "cccc")
+    })
+  }
+  
+  
   
   # If the code is numeric (or should be but wasn't passed
   # as an interger), make it one
@@ -143,13 +157,13 @@ cpt_to_css <- function(cpt_code, data) {
   
   # If coerced cpt_code is numeric, use ranges
   if(is.numeric(cpt_code)) {
-    ccs_pr_cpt %>% 
+    .data %>% 
       mutate(CodeRange_begin = as.numeric(CodeRange_begin),
              CodeRange_end = as.numeric(CodeRange_end)) %>%
       filter(!is.na(CodeRange_begin)) %>%
       filter(cpt_code>=CodeRange_begin, cpt_code<=CodeRange_end)
   } else({
-    filter(ccs_pr_cpt, CodeRange_begin==cpt_code  |  CodeRange_end==cpt_code)
+    filter(.data, CodeRange_begin==cpt_code  |  CodeRange_end==cpt_code)
   })
 }
 
@@ -158,6 +172,12 @@ cpt_to_css(28800)
 cpt_to_css("0202T")  # Results when code isn't numeric
 cpt_to_css("27603")  # Still works if numeric code passed as char
 cpt_to_css(97597)
+
+
+c(11042:11047, 97597:97602, 10060, 10061, 20000, 20005) %>%
+  map_dfr(cpt_to_css) %>%
+  select(CSS, CSS_Label) %>%
+  unique() 
 
 rm(cpt_to_css)
 ```
