@@ -3,6 +3,10 @@ nis.db
 nis.*
 *.db
 
+# CPT codes are copyright of AMA, so don't share
+HCUP Files/2019_ccs_services_procedures.csv
+HCUP Files/clean_ccs/ccs_pr_cpt.csv
+
 
 # *** BEGIN generic .gitignore stuff ***
 # folders (for raw data, etc)
@@ -31,6 +35,8 @@ rsconnect
 *.html
 *.png
 *.pdf
+*.xlsx
+*.xls
 
 
 
@@ -72,3 +78,4 @@ vignettes/*.pdf
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+
