@@ -2,7 +2,7 @@ library(tidyverse)
 library(icd)    # helps with ICD codes 
 # devtools::install_github("jackwasey/icd")
 library(touch)  # Tools Of Unilization and Cost in Healthcare
-library(googlesheets4)
+library(googlesheets4); gs4_auth(email="hunterratliff1@gmail.com")
 
 # Load helper functions
 source("~/Github/HCUP/helper_functions.R") 
@@ -358,8 +358,33 @@ c("E11.621", "L97.3x", "L97.4x", "L97.5x") %>%
   sheet_write(ss=ss, sheet="Open Wounds")
 
 
-
-
+###############################
+###   Stump complications   ###
+### ----------------------- ###
+c("T87.3x", "T87.4x", "T87.5x", "T87.8x") %>%
+  
+  # Look up codes & children
+  map_dfr(expand_icd10, Comorbidity = "Stump complications") %>%
+  
+  # Limit to lower extremity
+  filter(str_detect(ICD10, "T87.[3-4]")|str_detect(ICD10, "T878.")) %>%
+  
+  # Get type of stump complication
+  mutate(complication_type = case_when(
+                               ICD10=="T8781"            ~ "Dehiscence",
+                               ICD10=="T8789"            ~ "Other",
+                               str_detect(ICD10, "T873") ~ "Neuroma",
+                               str_detect(ICD10, "T874") ~ "Infection",
+                               str_detect(ICD10, "T875") ~ "Necrosis")) %>%
+  
+  # Pull laterality
+  mutate(Laterality = case_when(str_detect(ICD10, "T87.3") ~ "Right",
+                                str_detect(ICD10, "T87.4") ~ "Left")) %>%
+  
+  # Write to google sheet
+  sheet_write(ss=ss, sheet="Stump complications")
+  
+  
 
 
 
