@@ -1,0 +1,207 @@
+---
+title: "ICD-10-PCS Schema"
+description: |
+  Some notes about how PCS-10 codes work.
+author:
+  - name: Hunter Ratliff 
+    url: https://github.com/HunterRatliff1
+date: "5/24/2020"
+output:
+  distill::distill_article:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(pander)
+```
+
+# Syntax
+
+ICD-10-PCS has a seven character alphanumeric code structure, and follows a common syntax. More details can be found in this [CMS document](https://www.cms.gov/Medicare/Coding/ICD10/Downloads/2014-pcs-procedure-coding-system.pdf). The first character represents the section, shown by the table below:
+
+```{r}
+c1_key <- c("0" = "Medical and Surgical",
+            "1" = "Obstetrics",
+            "2" = "Placement",
+            "3" = "Administration",
+            "4" = "Measurement and Monitoring",
+            "5" = "Extracorporeal Assistance and Performance",
+            "6" = "Extracorporeal Therapies",
+            "7" = "Osteopathic",
+            "8" = "Other Procedures",
+            "9" = "Chiropractic",
+            "B" = "Imaging",
+            "C" = "Nuclear Medicine",
+            "D" = "Radiation Oncology",
+            "F" = "Physical Rehabilitation and Diagnostic Audiology",
+            "G" = "Mental Health",
+            "H" = "Substance Abuse Treatment")
+
+tibble(`1st character` = names(c1_key),
+       `Section_name`  = c1_key) %>%
+  pander(justify="left")
+```
+
+## Medical & Surgical Section
+
+The **Medical and Surgical** section follows a uniform format, with the meanings for the seven characters shown below:
+
+<aside>This format only applies to section 0, but many of the other sections follow similar formats</aside>
+
+|    1    |      2      |        3       |     4     |     5    |    6   |     7     |
+|:-------:|:-----------:|:--------------:|:---------:|:--------:|:------:|:---------:|
+| Section | Body System | Root Operation | Body Part | Approach | Device | Qualifier |
+
+## Body Systems
+
+For all the medical & surgical procedures, the section will equal zero. The second character indicates the general body system (e.g. CNS, muscles, skin and breast, tendons, GI, etc). Some sections that might be of interest for our work are as follows:
+
+| Body System                           | Code |
+|---------------------------------------|------|
+| Lower Arteries                        | 04   |
+| Lower Veins                           | 06   |
+| Skin and Breast                       | 0H   |
+| Subcutaneous Tissue and Fascia        | 0J   |
+| Muscles                               | 0K   |
+| Tendons                               | 0L   |
+| Bursae and Ligaments                  | 0M   |
+| Lower Bones                           | 0Q   |
+| Lower Joints                          | 0S   |
+| Anatomical Regions, Lower Extremities | 0Y   |
+
+
+
+# Root operations
+
+## Take Out Some or All of a Body Part
+
+From [this article](http://bok.ahima.org/doc?oid=98647#.Xs7ZGZ5KiHE)
+
+### Excision (B) {#Excision}
+
+When a sharp instrument is used to cut out or off a **portion**^[See _Resection_ for cutting off entire body part] of a body part *without replacement*. 
+
+<aside>
+Note: Bone marrow and endometrial biopsies (considered to be [extraction](#Extraction))
+</aside>
+
+Examples: _partial nephrectomy, liver biopsy, breast lumpectomy_
+
+### Resection (T)
+
+Similar to Excision, but of an **entire** body part. It appears to vary on what is considered a body part, so this gets confusing 
+
+Examples: _total nephrectomy, total lobectomy of lung, total mastectomy_
+
+### Detachment (6)
+
+Detachment is defined as cutting off all or part of the upper or lower extremities. It represents a narrow range of procedures and is used **exclusively for amputation** procedures
+
+### Destruction (5)
+
+Destruction is defined as the physical eradication of all or a portion of a body part by the direct use of energy, force, or a destructive agent. For destruction, **none of the body is taken out**, but rather obliterated so it's no longer there
+
+Example: _cautery of skin lesion, cryotherapy of warts_
+
+### Extraction (D) {#Extraction}
+
+Extraction is defined as **pulling or stripping out**^[From what I gather, this is distinguished from _Excision_ or _Resection_ in that it does **not** use sharp instruments] or off all or a portion of a body part by the use of force. Minor cutting, such as that used in vein stripping procedures, is included in extraction if the objective of the procedure is met by pulling or stripping.
+
+Examples: _nonexcisional debridement of skin, extraction of teeth, bone marrow biopsy, endometrial biopsy, or liposuction for medical purposes_
+
+## Take Out Solids, Fluids, Gases from a Body Part
+
+From [this article](http://library.ahima.org/doc?oid=99315#.Xs7chZ5KiHE). Unlike Excision, Resection, Detachment, Destruction, and Extraction, these don't focus on the body itself
+
+### Drainage (9)
+
+Drainage is defined as taking or letting out **fluids or gases**^[See _Extirpation_ for removal of solid matter from body part] from a body part
+
+Examples: _diagnostic paracentesis, thoracentesis, incision and drainage of abscess_
+
+### Extirpation (C)
+
+Extirpation is defined as taking or cutting out **solid matter**^[See _Drainage_ for removal of fluids or gases] or material from a body part. This root operation represents a range of procedures where the body part itself is not the focus of the procedure. The solid material may be an abnormal byproduct of a biological function (thrombus, kidney stone) or a foreign body.
+
+### Fragmentation (F)
+
+Fragmentation is defined as the **breaking apart** of solid matter in a body part. An important distinction of a fragmentation procedure is that the solid matter is fragmented **but not removed** from the body.
+
+
+```{r, layout="l-body-outset"}
+tibble(
+  Operation = c("Drainage", "Extirpation", "Fragmentation"),
+  Action = c("Taking or letting out", "Taking or letting out", "Breaking down"),
+  Target = c("Fluid/gas from body part", "Solid matter in a body part", "Solid matter in a body part"),
+  # Clarification = c("Without taking out any of the body part"),
+  Example = c("Incision and drainage", "Thrombectomy", "Lithotripsy of gallstones")
+) %>%
+  pander(justify="left", caption="Procedures That Take Out Or Eliminate Solid Matter, Fluids, Or Gases From A Body Part")
+```
+
+<aside>
+This table actually comes from [this article](https://www.icd10monitor.com/icd-10-pcs-says-extirpation-what-does-the-physician-s-documentation-say)
+</aside>
+
+## Other Root operations
+
+<aside>
+This section isn't as well defined as the prior sections, but are here for future reference
+</aside>
+
+### Root Operations That Alter the Diameter/Route of a Tubular Body Part
+
+Found in [part 3](http://library.ahima.org/doc?oid=101995#.Xs7l0J5KjOR)
+
+- **Restriction** (V): partially closing an orifice or the lumen of a tubular body part
+- **Occlusion** (L): completely closing an orifice or the lumen of a tubular body part
+- **Dilation** (7): expanding an orifice or the lumen of a tubular body part
+- **Bypass** (1): altering the route of passage of the contents of a tubular body part
+
+### Root Operations That Define Other Repairs
+
+Found in [part 3](http://library.ahima.org/doc?oid=101995#.Xs7l0J5KjOR)
+
+- **Control** (3): stopping, or attempting to stop, postprocedural bleeding
+- **Repair** (Q): restoring, to the extent possible, a body part to its normal anatomic structure and function
+
+### Root Operations That Always Involve a Device
+
+Found in [part 4](http://library.ahima.org/doc?oid=102223#.Xs7mzZ5KjOQ)
+
+- **Insertion** (H): putting in a nonbiological appliance that monitors, assists, performs, or prevents a physiological function but does not physically take the place of a body part
+- **Replacement** (R): putting in or on biological or synthetic material that physically takes the place and/or function of all or a portion of a body part
+- **Supplement** (U): putting in or on biologic or synthetic material that physically reinforces and/or augments the function of a portion of a body part
+- **Change** (2): taking out or off a device from a body part and putting back an identical or similar device in or on the same body part without cutting or puncturing the skin or a mucous membrane
+- **Removal** (P): taking out or off a device from a body part
+- **Revision** (W): correcting, to the extent possible, a malfunctioning or displaced device
+
+### Root Operations Involving Examination Only
+
+Found in [part 4](http://library.ahima.org/doc?oid=102223#.Xs7mzZ5KjOQ)
+
+- **Inspection** (J):  visually and/or manually exploring a body part
+- **Map** (K): locating the route of passage of electrical impulses and/or locating functional areas in a body part
+
+### Root Operations That Define Other Objectives
+
+Found in [part 4](http://library.ahima.org/doc?oid=102223#.Xs7mzZ5KjOQ)
+
+- **Fusion** (G):  joining together portions of an articular body part, rendering the articular body part immobile
+- **Alteration** (0): modifying the natural anatomic structure of a body part without affecting the function of the body part
+- **Creation** (4): making a new genital structure that does not physically take the place of a body part and is used only for sex change operations
+
+# Debridement
+
+Per this [article](https://www.icd10monitor.com/the-hate-factor-convention-a-11), this can be 
+
+Excisional (see [Excision](#Excision))
+
+Non-excisional (see [Extraction](#Extraction))
+
+
+
+excision vs extirpation vs extraction
