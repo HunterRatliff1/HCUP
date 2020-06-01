@@ -2,11 +2,15 @@
 title: "Clinical Classifications Software"
 author: "Hunter Ratliff, htratlif@utmb.edu"
 date: "5/20/2020"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(echo = T, eval=F)
 library(tidyverse)
 library(icd) # helps with ICD codes
 library(touch)
@@ -21,15 +25,32 @@ The purpose of this program is to:
 - Facilitate reproducibility by documenting the steps from the HCUP raw files to the files used in practice
 - Document the version of files being used
 - Clean up some minor formatting issues
+- Document which file maps what
 
 ## Reading in these files
 
-If you read the parsed files in from CSV, EVERYTHING needs to be read in as characters
+If you read the parsed files in from CSV, *EVERYTHING* needs to be read in as characters
 
+## Overview of mapping
 
+- `ccs_pr_icd10`: ICD-10-PCS procedure codes --> Clinical Classifications Software
+- `ccs_dx_icd10`: ICD-10-CM diagnosis codes -->  Clinical Classifications Software
+    - These are the same 283 CCS categories as used in icd9
+- `ccsR_dx_icd10`: ICD-10-CM diagnosis codes -->  Clinical Classifications Software **Refined**
+- `ccs_pr_icd9`: ICD-9-PCS procedure codes --> Clinical Classifications Software
+- `ccs_dx_icd9`: ICD-9-CM diagnosis codes -->  Clinical Classifications Software
+- `ccs_pr_cpt`: CPT and HCPCS codes -->  Clinical Classifications Software
 
+| Table Name      | Col1                 | Col2         | Maps to                   | Link |
+|-----------------|----------------------|--------------|---------------------------|------|
+| `ccs_pr_icd10`  | ICD-10-PCS procedure | CCS          | ccs_pr_icd9, ccs_pr_cpt   | [Source](https://www.hcup-us.ahrq.gov/toolssoftware/ccs10/ccs10.jsp) |
+| `ccs_dx_icd10`  | ICD-10-CM diagnosis  | CCS          | ccs_dx_icd9               | [Source](https://www.hcup-us.ahrq.gov/toolssoftware/ccsr/ccsr_archive.jsp#ccsbeta) |
+| `ccsR_dx_icd10` | ICD-10-CM diagnosis  | CCS Refined† | N/A                       | [Source](https://www.hcup-us.ahrq.gov/toolssoftware/ccsr/ccs_refined.jsp) |
+| `ccs_pr_icd9`   | ICD-9-PCS procedure  | CCS          | ccs_pr_icd10, ccs_pr_cpt  | [Source](https://www.hcup-us.ahrq.gov/toolssoftware/ccs/ccs.jsp) |
+| `ccs_dx_icd9`   | ICD-9-CM diagnosis   | CCS          | ccs_dx_icd10              | [Source](https://www.hcup-us.ahrq.gov/toolssoftware/ccs/ccs.jsp) |
+| `ccs_pr_cpt`    | CPT and HCPCS codes  | CCS          | ccs_pr_icd10, ccs_pr_icd9 | [Source](https://www.hcup-us.ahrq.gov/toolssoftware/ccs_svcsproc/ccssvcproc.jsp) |
 
-
+† These are 530 categories (hence [refined](https://www.hcup-us.ahrq.gov/toolssoftware/ccsr/DXCCSR-User-Guide.pdf#page=7)) that do not map to the 283 CCS categories
 
 # ICD-10
 
@@ -40,6 +61,7 @@ ICD-10-PCS (procedure) codes --> Clinical Classifications Software
 Downloaded _beta_ version 2020.1 from [HCUP website](https://www.hcup-us.ahrq.gov/toolssoftware/ccs10/ccs10.jsp) on 2020-05-20
 
 The beta versions of the ICD-10-PCS tool file (CSV) are composed of eight fields separated by commas. The files are organized as follows:
+
 - Field 1: Procedure Code
 - Field 2: CCS Category
 - Field 3: Code Description
@@ -57,8 +79,6 @@ ccs_pr_icd10 <- read_csv("HCUP Files/ccs_pr_icd10pcs_2020_1.csv",skip = 1,
 
 ccs_pr_icd10 %>% write_csv("HCUP Files/clean_ccs/ccs_pr_icd10.csv")
 ccs_pr_icd10
-
-
 ```
 
 ## Diagnosis - CCS
@@ -103,12 +123,35 @@ ccsR_dx_icd10
 
 ## Procedures - CCS
 
+ICD-9-PCS (procedure) codes -->  Clinical Classifications Software
+
+Downloaded 2015 version from [HCUP website](https://www.hcup-us.ahrq.gov/toolssoftware/ccs/ccs.jsp) on 2020-06-01
+
 ```{r}
-"TBD"
+ccs_pr_icd9 <- read_csv("HCUP Files/icd9/single_level/$prref 2015.csv", skip = 3,
+                        col_names = c("I9_PR", "CCS_category", "CCS_category_Desc", "I9_PR_Desc")) %>%
+  mutate_all(~str_remove_all(.,"'"))
+
+ccs_pr_icd9 %>% write_csv("HCUP Files/clean_ccs/ccs_pr_icd9.csv")
+ccs_pr_icd9
 ```
 
 
 ## Diagnosis - CCS
+
+ICD-9-CM (diagnosis) codes -->  Clinical Classifications Software
+
+Downloaded 2015 version from [HCUP website](https://www.hcup-us.ahrq.gov/toolssoftware/ccs/ccs.jsp) on 2020-06-01
+
+```{r}
+ccs_dx_icd9 <- read_csv("HCUP Files/icd9/single_level/$dxref 2015.csv", skip = 3,
+                        col_names = c("I9_DX", "CCS_category", "CCS_category_Desc",
+                                      "I9_DX_Desc", "CCS_optional", "CCS_optional_Desc")) %>%
+  mutate_all(~str_remove_all(.,"'"))
+
+ccs_dx_icd9  %>% write_csv("HCUP Files/clean_ccs/ccs_dx_icd9.csv")
+ccs_dx_icd9
+```
 
 
 # CPT to CSS
@@ -184,5 +227,21 @@ rm(cpt_to_css)
 
 
 
+```{r}
+t1 <- ccs_pr_icd10 %>%
+  select(CCS_category, CCS_category_Desc) %>%
+  mutate(CCS_category = as.numeric(CCS_category)) %>%
+  distinct()  %>%
+  select(-CCS_category_Desc)
+
+t2 <- ccs_pr_icd9 %>%
+  select(CCS_category, CCS_category_Desc) %>%
+  mutate(CCS_category = as.numeric(CCS_category)) %>%
+  distinct() %>%
+  select(-CCS_category_Desc)
+
+anti_join(t1, t2)
+rm(t1, t2)  
+```
 
 
