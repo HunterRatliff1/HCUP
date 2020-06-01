@@ -194,23 +194,7 @@ Found in [part 4](http://library.ahima.org/doc?oid=102223#.Xs7mzZ5KjOQ)
 - **Alteration** (0): modifying the natural anatomic structure of a body part without affecting the function of the body part
 - **Creation** (4): making a new genital structure that does not physically take the place of a body part and is used only for sex change operations
 
-# Debridement
 
-Per this [article](https://www.icd10monitor.com/the-hate-factor-convention-a-11), and the 3M codebook this may be Excisional or Non-excisional
-
-## Excisional debridement
-
-[Excisional](#Excision) debridement is the "surgical removal or cutting away of devitalized tissue, necrosis, or slough". This may be I&D, Mechanical irrigation, etc
-
-Excision debridement of skin is an extremely rare procedure as typically the surgeon needs to debride down below the dermal layer
-
-## Non-excisional debridement
-
-- Non-excisional (see [Extraction](#Extraction)) debridement includes "brushing, irrigating, scrubbing, or washing of devitalized tissue, necrosis, or slough".
-
-
-
-excision vs extirpation vs extraction
 
 # Lower Extremity Amputation
 
@@ -238,3 +222,19 @@ Per 3M's Coding CDI program, a **partial foot** amputation occurs anywhere along
 
 The upper and lower leg are subdivided into **high** (proximal portion of shaft), **mid** (middle portion of the shaft), and **low** (distal portion of the shaft)
 
+
+
+
+# Debridement
+
+Per this [article](https://www.icd10monitor.com/the-hate-factor-convention-a-11), and the 3M codebook this may be Excisional or Non-excisional
+
+## Excisional debridement
+
+[Excisional](#Excision) debridement is the "surgical removal or cutting away of devitalized tissue, necrosis, or slough". This may be I&D, Mechanical irrigation, etc
+
+Excision debridement of skin is an extremely rare procedure as typically the surgeon needs to debride down below the dermal layer
+
+## Non-excisional debridement
+
+- Non-excisional (see [Extraction](#Extraction)) debridement includes "brushing, irrigating, scrubbing, or washing of devitalized tissue, necrosis, or slough".
