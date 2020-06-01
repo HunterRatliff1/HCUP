@@ -79,8 +79,19 @@ split_pcs10_codes <- function(.data, ..., recode_list, as_fct=F, col_name=I10_PR
   
   # If given list to recode
   if(!missing(recode_list)) {
+    
+    ## If you want to use the recode function, you have to pass a list to all the
+    ## columns, so we just pass c(" "=" ") so the function doesn't fail
+    if(is.null(recode_list$BodySystem)) recode_list$BodySystem <- c(" "=" ")
+    if(is.null(recode_list$Operation))  recode_list$Operation <- c(" "=" ")
+    if(is.null(recode_list$BodyPart))   recode_list$BodyPart <- c(" "=" ")
+    if(is.null(recode_list$Approach))   recode_list$Approach <- c(" "=" ")
+    if(is.null(recode_list$Device))     recode_list$Device <- c(" "=" ")
+    if(is.null(recode_list$Qualifier))  recode_list$Qualifier <- c(" "=" ")
+    
+    # Verify names are in list
     testthat::expect_named(recode_list, c("BodySystem", "Operation", "BodyPart",
-                                          "Approach", "Device", "Qualifier"))
+                                          "Approach", "Device", "Qualifier"), ignore.order = T)
     
     df <- df %>%
       mutate(BodySystem = recode(BodySystem, !!!recode_list$BodySystem),
