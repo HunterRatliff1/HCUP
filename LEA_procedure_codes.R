@@ -92,7 +92,7 @@ skin_recode <- list(
                    "J"="SQ/Fascia", 
                    "Y"="Lower Extremities"),
   "Operation"  = c("9"="Drainage"),
-  "BodyPart"   = c("8" = "Buttock", "A"="Ingunal",
+  "BodyPart"   = c("8" = "Buttock", "A"="Inguinal Region",
                    "H" = "R Upper Leg", "J" = "L Upper Leg",
                    "K" = "R Lower Leg", "L" = "L Lower Leg",
                    "M" = "R Foot",      "N" = "L Foot"),
@@ -192,22 +192,50 @@ rm(WC_recode)
 
 
 
+###############################
+###   Make concise tables   ###
+### ----------------------- ###
+# Bind all the 'drainage' procedures together
+drainage <- bind_rows(SQ_df, 
+                      skin_df, 
+                      filter(LE_df, Operation=="Drainage")) 
+
+
+# Make LEAs ('detachment') and fit various "BodyParts" into one column
+LEA <- LE_df %>% 
+  # Only amputations
+  filter(Operation=="Detachment") %>%
+  
+  mutate(custom_level = case_when(str_detect(BodyPart, "Toe")           ~ "Toe",
+                                  BodyPart!="Foot"                      ~ BodyPart,
+                                  Qualifier=="Complete"                 ~ "Whole foot",
+                                  str_detect(Qualifier, "Ray_Complete") ~ "Whole Ray",
+                                  str_detect(Qualifier, "Ray_Partial")  ~ "Partial Ray")) %>%
+  
+  # Extract digit for toes & rays
+  mutate(Digit = case_when(str_detect(BodyPart, "_\\d$")  ~ str_extract(BodyPart, "\\d$"),
+                           str_detect(Qualifier, "_\\d$") ~ str_extract(Qualifier, "\\d$"))) %>%
+  
+  # Replace old BodyPart with new version
+  mutate(BodyPart = custom_level) %>%
+  select(-custom_level) 
+
+
+# Make table with everything else LE related
+all_other_LE_proc <- LE_df %>% filter(!Operation %in% c("Detachment", "Drainage"))
+
+
 
 ###############################
 ###   Write to Excel file   ###
 ### ----------------------- ###
-drainage <- bind_rows(SQ_df, skin_df, filter(LE_df, Operation=="Drainage")) 
-LEA <- LE_df %>% filter(Operation=="Detachment")
-all_other_LE_proc <- LE_df %>% filter(!Operation %in% c("Detachment", "Drainage"))
-
-# export
 list(
   "I&D"                 = drainage,
   "LEA"                 = LEA,
   "WoundCare"           = wc_df,
   "Other LE procedures" = all_other_LE_proc
 ) %>%
-  WriteXLS::WriteXLS(ExcelFileName = "LEA_procedure_codes.xlsx")
+  WriteXLS::WriteXLS(ExcelFileName = "LEA_procedure_codes_v2.xlsx")
 
 rm(LEA, all_other_LE_proc, SQ_df, skin_df)
 
