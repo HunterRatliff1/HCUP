@@ -70,12 +70,12 @@ split_pcs10_codes <- function(.data, ..., recode_list, as_fct=F, col_name=I10_PR
   
   # split out the codes
   df <- .data %>%
-    mutate(BodySystem = str_sub(!!col_name, start = 2L, end = 2L),
-           Operation  = str_sub(!!col_name, start = 3L, end = 3L),
-           BodyPart   = str_sub(!!col_name, start = 4L, end = 4L),
-           Approach   = str_sub(!!col_name, start = 5L, end = 5L),
-           Device     = str_sub(!!col_name, start = 6L, end = 6L),
-           Qualifier  = str_sub(!!col_name, start = 7L, end = 7L))
+    mutate(BodySystem = str_sub(as.character(!!col_name), start = 2L, end = 2L),
+           Operation  = str_sub(as.character(!!col_name), start = 3L, end = 3L),
+           BodyPart   = str_sub(as.character(!!col_name), start = 4L, end = 4L),
+           Approach   = str_sub(as.character(!!col_name), start = 5L, end = 5L),
+           Device     = str_sub(as.character(!!col_name), start = 6L, end = 6L),
+           Qualifier  = str_sub(as.character(!!col_name), start = 7L, end = 7L))
   
   # If given list to recode
   if(!missing(recode_list)) {
