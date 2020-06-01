@@ -196,12 +196,45 @@ Found in [part 4](http://library.ahima.org/doc?oid=102223#.Xs7mzZ5KjOQ)
 
 # Debridement
 
-Per this [article](https://www.icd10monitor.com/the-hate-factor-convention-a-11), this can be 
+Per this [article](https://www.icd10monitor.com/the-hate-factor-convention-a-11), and the 3M codebook this may be Excisional or Non-excisional
 
-Excisional (see [Excision](#Excision))
+## Excisional debridement
 
-Non-excisional (see [Extraction](#Extraction))
+[Excisional](#Excision) debridement is the "surgical removal or cutting away of devitalized tissue, necrosis, or slough". This may be I&D, Mechanical irrigation, etc
+
+Excision debridement of skin is an extremely rare procedure as typically the surgeon needs to debride down below the dermal layer
+
+## Non-excisional debridement
+
+- Non-excisional (see [Extraction](#Extraction)) debridement includes "brushing, irrigating, scrubbing, or washing of devitalized tissue, necrosis, or slough".
 
 
 
 excision vs extirpation vs extraction
+
+# Lower Extremity Amputation
+
+## Accessing source material
+
+1. Go to Citrix, open up the **3M coding program**
+2. Click `References` > **Clinical Documentation Improvement System Reference**
+3. Under `Frequently Used References` > `Code Level Documentation Reference` > **ICD-10-CM/PCS**
+4. Navigate to the section & chapter desired, and click on codes
+
+## Toe amputations
+
+For toe amputations:
+
+- **Complete** toe amputation is amputation at the metatarsal-phalangeal joint.
+- **High** toe amputation is amputation anywhere along the proximal phalanx.
+- **Mid** toe amputation is amputation through the proximal interphalangeal joint (PIP) or anywhere along the middle phalanx.
+- **Low** toe amputation is amputation through the distal interphalangeal joint (DIP) or anywhere along the distal phalanx.
+
+## Foot amputations
+
+Per 3M's Coding CDI program, a **partial foot** amputation occurs anywhere along _the shaft or head of the metatarsal bone_ of the foot. **Complete foot amputation** is an amputation through the _tarsal-metatarsal joint of the foot (Lisfranc joint)_. Amputation at the _ankle joint_ is also classified as a complete foot amputation.
+
+## Upper & Lower Leg
+
+The upper and lower leg are subdivided into **high** (proximal portion of shaft), **mid** (middle portion of the shaft), and **low** (distal portion of the shaft)
+
